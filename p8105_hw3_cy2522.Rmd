@@ -71,15 +71,95 @@ brfss_tidy %>%
 
 ```
  Problem 1 answers:
- 1. cleaning the dataset:
+ **1. cleaning the dataset:**
     - clean the names of the variables of the brfss data.
     - `filter` the topic so that there is only one topic "Overall Health"
     - use `mutate` function so that I can set the order of the factor response, from which I can also see delete the other seponses in the dataset.
 
- 2. questions:
+** 2. questions:**
     - In 2002, **CT, FL, NC** were observed at 7 locations. 
     (After `group_by` and `summarize` we can get the number of observations of each state, then we can get the three states whose observations equal 7.)
     - We can see the plot named "spaghetti plot of observations in each state from 2002 to 2010" above. From the plot we can know that overall the states' observations are increasing. And we can also see the different tendency of observations of each state and the differences between them.
     - From the table shown above, from 2002 to 2010, the average of Excellent proportion in NY has been increasing, meanwhile the sd is getting smaller, meaning that the response value data of Excellent is getting more stable.
     - 
-    
+
+# problem 2
+```{r}
+## import the data
+library(p8105.datasets)
+
+data(instacart)
+
+## exploration of the data
+inst_tidy = instacart %>%
+  janitor::clean_names()
+
+ dim(inst_tidy)
+ str(inst_tidy)
+ n_distinct(inst_tidy$product_id) 
+```
+ problem 2
+** 1. Exploration of the datasets**
+   - From the datasets, we can see the size is  1384617, 15, meaning there are 1384614 observations of 15 variables. Using `str()` we can get the overall struction of the data.
+   - The variables in the dataset are characters and integers. The variable order_id , product_id, user_id , add_to_cart_order and some other variables are all integers, and there are character variables like eval_set, product_name and aisle.  
+   - We can know the meaning of some variables via the values and names of them -- the IDs of the products, users, departments and orders, the names of the products, the number of orders and so on. So from the data we can know that this may be the trading data from instacart. By using `n_distinct`, we can get the exact number of the orders and products and other things . For example, we can know there are 39123 products sold in the dataset.
+   
+**2. questions**
+```{r}
+## How many aisles are there, and which aisles are the most items ordered from?
+
+n_distinct(inst_tidy$aisle)
+names(table(inst_tidy$aisle))[which.max(table(inst_tidy$aisle))]
+
+## Make a plot that shows the number of items ordered in each aisle. Order aisles sensibly, and organize your plot so others can read it.
+
+inst_tidy %>%
+  group_by(aisle, department) %>%
+  summarize(n = n()) %>%
+  ggplot(aes(x = aisle, y = n, color = department)) +
+  ylim(0, 40000) +
+  geom_point() +
+  facet_grid(.~ department  ) +
+  labs( 
+    title = " plot of aisles data",
+    x = "department",
+    y = "number")
+
+
+## Make a table showing the most popular item aisles 
+
+inst_tidy %>%
+  filter(aisle %in% c("baking ingredients", "dog food care", "packaged vegetables fruits")) %>%
+  group_by(aisle) %>%
+  summarize(
+    mostpop = names(table(product_name))[which.max(table(product_name))]) %>%
+  knitr::kable(caption = "table of most popular items")
+  
+## Make a table showing the mean hour of the day
+ 
+inst_tidy %>% 
+  filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>%
+  group_by(product_name, order_dow) %>%
+  summarize(mean = mean(order_hour_of_day)) %>%
+  spread(key = order_dow, value = mean) %>%
+  knitr::kable(digits = 3, caption = "the table of mean hour")
+  
+  
+```
+ 
+problem 2
+**2. questions:**
+(1) How many aisles are there, and which aisles are the most items ordered from?
+- There are 134 distinct aisles, and most items ordered from "fresh vegetables".
+
+(2) Make a plot that shows the number of items ordered in each aisle. 
+- From the plot above, we can see the different number of products ordered in each aisle. Histogram can clearly present the differences between the amounts of each variable. And to be clearer, I use colors depend on the department. But the plot still need to be seen from a bigger window due to the large number of aisles.
+
+(3) Make a table showing the most popular item from certain aisles.
+- The 3*2 table has two variables -- "aisle" and "mostpop". From the table,  we can know that:
+  - In "baking ingredients" aisle, "Light Brown Sugar" is the most popular;
+  - In "dog food care", "Snacks sticks Chicken & Rice Recipe Dog Treats" is the most popular;
+  - In "packages vegetables fruits", "Organic Baby Spinach" is the most popular.
+  
+(4) Make a table showing the mean hour of the day.
+- I finally get a 2*7 table. There are 7 key variables as column names -- from 0 to 6, and the row names are the names of the two products. The values are means of the hours of each day in a week. 
